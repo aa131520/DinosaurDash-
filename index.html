@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinosaur Dash - 2 Player</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        canvas {
+            border: 2px solid #333;
+            display: block;
+            margin: 20px auto;
+            background: linear-gradient(to bottom, #87cefa, #fff);
+        }
+
+        .instructions {
+            font-size: 18px;
+            margin: 20px;
+        }
+
+        .player {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dinosaur Dash - 2 Player</h1>
+    <p class="instructions">Player 1: Use W to jump | Player 2: Use UP Arrow to jump</p>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Game variables
+        let gameSpeed = 5;
+        let gravity = 0.5;
+
+        // Players
+        const player1 = { x: 100, y: 300, width: 50, height: 50, color: "blue", dy: 0, isJumping: false };
+        const player2 = { x: 200, y: 300, width: 50, height: 50, color: "red", dy: 0, isJumping: false };
+
+        // Obstacles
+        const obstacles = [];
+        const obstacleSpawnRate = 100; // Frames
+        let frameCount = 0;
+
+        function drawPlayer(player) {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawObstacle(obstacle) {
+            ctx.fillStyle = "green";
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        }
+
+        function updatePlayer(player) {
+            if (player.isJumping) {
+                player.dy += gravity;
+                player.y += player.dy;
+
+                if (player.y >= 300) {
+                    player.y = 300;
+                    player.dy = 0;
+                    player.isJumping = false;
+                }
+            }
+        }
+
+        function spawnObstacle() {
+            const obstacle = {
+                x: canvas.width,
+                y: 350,
+                width: 20,
+                height: 50,
+            };
+            obstacles.push(obstacle);
+        }
+
+        function updateObstacles() {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= gameSpeed;
+
+                // Remove off-screen obstacles
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+        }
+
+        function detectCollision(player, obstacle) {
+            return (
+                player.x < obstacle.x + obstacle.width &&
+                player.x + player.width > obstacle.x &&
+                player.y < obstacle.y + obstacle.height &&
+                player.y + player.height > obstacle.y
+            );
+        }
+
+        function gameOver() {
+            alert("Game Over! Refresh to play again.");
+            window.location.reload();
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawPlayer(player1);
+            drawPlayer(player2);
+
+            updatePlayer(player1);
+            updatePlayer(player2);
+
+            if (frameCount % obstacleSpawnRate === 0) {
+                spawnObstacle();
+            }
+
+            updateObstacles();
+
+            for (const obstacle of obstacles) {
+                drawObstacle(obstacle);
+
+                if (detectCollision(player1, obstacle) || detectCollision(player2, obstacle)) {
+                    gameOver();
+                }
+            }
+
+            frameCount++;
+            requestAnimationFrame(update);
+        }
+
+        // Event listeners for controls
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "w" && !player1.isJumping) {
+                player1.isJumping = true;
+                player1.dy = -10;
+            }
+
+            if (e.key === "ArrowUp" && !player2.isJumping) {
+                player2.isJumping = true;
+                player2.dy = -10;
+            }
+        });
+
+        // Start the game
+        update();
+    </script>
+</body>
+</html>
